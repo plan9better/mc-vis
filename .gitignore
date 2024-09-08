@@ -1,0 +1,5 @@
+raylib/
+*.js
+*.html
+*.wasm
+*.h.gch
