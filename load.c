@@ -1,6 +1,7 @@
 #include "load.h"
 
 block* loadBlocks(char* filename, int *amount){
+	printf("Loading files\n");
   FILE *file = fopen(filename, "r");
   if(!file){
     printf("Failed to open file\n");
