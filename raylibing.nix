@@ -14,11 +14,8 @@ pkgs.mkShell {
     # project specific
     emscripten
     cmake
-    nodejs_20
-    python3
-    python312Packages.django
-    python312Packages.channels
-    pylyzer
+    go
+    gopls
   ];
 
   shellHook = ''
