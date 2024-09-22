@@ -4,9 +4,61 @@ import (
 	"net"
 	"log"
 	"fmt"
+	"os"
+
+	"github.com/wasmerio/wasmer-go/wasmer"
 )
 
-func handleConnections(ch<- chan []byte){
+func callWasm(){
+	// Read the WASM file
+	wasmBytes, err := os.ReadFile("../static/index.wasm")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Instantiate the WebAssembly runtime
+	engine := wasmer.NewEngine()
+	store := wasmer.NewStore(engine)
+
+	// Compile the module
+	module, err := wasmer.NewModule(store, wasmBytes)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Create an empty import object
+	importObject := wasmer.NewImportObject()
+
+	// Instantiate the WebAssembly module
+	instance, err := wasmer.NewInstance(module, importObject)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Get the `add` exported function
+	initFunc, err := instance.Exports.GetFunction("initBlocks")
+	if err != nil {
+		log.Fatal(err)
+	}
+	addFunc, err := instance.Exports.GetFunction("addBlock")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Call the `add` function with arguments 2 and 3
+	result, err := initFunc(1)
+	if err != nil {
+		log.Fatal(err)
+	}
+	result, err = addFunc("Water -96 62 224")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Printf("Result: %v\n", result)
+}
+
+func handleConnections(ch chan []byte){
 	listener, err := net.Listen("tcp", ":8337")
 	if err != nil{
 		log.Fatal("Could not start a tcp socket")
@@ -18,10 +70,15 @@ func handleConnections(ch<- chan []byte){
 			log.Println("Could not accept a connection")
 		}
 		go func(){
-			msg := make([]byte, 1024)
-			_, err := conn.Read(msg)
-			if err != nil {
-				log.Println("Error reading a msg from client: local: %s, remote: %s", conn.LocalAddr(), conn.RemoteAddr())
+			for conn != nil {
+				msg := make([]byte, 4096)
+				_, err := conn.Read(msg)
+				if err != nil {
+					log.Printf("Error reading a msg from client: local: %s, remote: %s\n", conn.LocalAddr(), conn.RemoteAddr())
+					conn.Close()
+					return
+				}
+				ch<-msg
 			}
 		}()
 	}
@@ -40,7 +97,9 @@ func main() {
 	    ch := make(chan []byte)
 	    go handleConnections(ch)
 	    for{
-		fmt.Println("new message: %v", <-ch)
+		fmt.Printf("new message: %s\n", <-ch)
+		fmt.Printf("initializing and adding block...\n")
+		callWasm();
 	    }
     }()
 
