@@ -1,5 +1,3 @@
 raylib/
-*.js
-*.html
-*.wasm
+static/index.*
 *.h.gch
