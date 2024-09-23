@@ -4,4 +4,7 @@
 - cd raylib/src
 - [compile raylib for wasm](https://github.com/raysan5/raylib/wiki/Working-for-Web-(HTML5)#2-compile-raylib-library)
 - make
-- python3 -m http.server 8080 (or serve some other way)
+- cd website
+- go run .
+- go to localhost:8080
+- enjoy
