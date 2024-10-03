@@ -22,16 +22,30 @@ const int screenWidth = 800;
 const int screenHeight = 450;
 
 void UpdateDrawFrame(void);     // Update and Draw one frame
+static Camera3D camera = { 0 };
 
 int main(){
-  InitWindow(screenWidth, screenHeight, "raylib [core] example - basic window");
+  InitWindow(screenWidth, screenHeight, "mc-vis");
+camera.position = (Vector3){ 30.0f, 20.0f, 30.0f }; // Camera position
+camera.target = (Vector3){ 0.0f, 0.0f, 0.0f };      // Camera looking at point
+camera.up = (Vector3){ 0.0f, 1.0f, 0.0f };          // Camera up vector (rotation towards target)
+camera.fovy = 70.0f;                                // Camera field-of-view Y
+camera.projection = CAMERA_PERSPECTIVE;             // Camera projection type
   emscripten_set_main_loop(UpdateDrawFrame, 0, 1);
   CloseWindow();
 
   return 0;
 }
 
+
 void UpdateDrawFrame(void){
+  BeginDrawing();
+  	ClearBackground(RAYWHITE);
+	DrawFPS(10, 10);
+	BeginMode3D(camera);
+	  DrawGrid(10, 5.0f);
+	EndMode3D();
+  EndDrawing();
   static int counter = 0;
   if(blocks == NULL){
     printf("%d: Blocks array is null.\n", counter++);
