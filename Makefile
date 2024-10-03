@@ -1,20 +1,11 @@
-# Compiler and linker
-EMCC      = emcc
+CC := emcc
+CFLAGS := -Wall -I./raylib/src
+LDFLAGS := -L./raylib/src -lraylib
 
-SRC := $(wildcard src/*.c)
-OUTPUT    = ./static/index.html
-CFLAGS    = -Wall -I./raylib/src 
-LDFLAGS   = -L./raylib/src -lraylib
+OUTPUT := -o static/index.html
+SRC := src/main.c
+SHELLFILE := --shell-file html_template/shell.html
+EXPORTS := -s NO_EXIT_RUNTIME=1 -s "EXPORTED_RUNTIME_METHODS=['ccall']" -s USE_GLFW=3
 
-
-# emcc
-EXPORTS   = -s "EXPORTED_RUNTIME_METHODS=['ccall','cwrap']" 
-LINKS     = --preload-file src/script.js@script.js --preload-file src/styles.css@styles.css
-SHELLFILE = --shell-file html_template/index.html
-EMFLAGS   = -s USE_GLFW=3 -s FULL_ES2=1 -s GL_ENABLE_GET_PROC_ADDRESS=1 -s NO_EXIT_RUNTIME=1
-
-all:
-	$(EMCC) $(SRC) $(CFLAGS) $(LDFLAGS) $(SFLAGS) $(EMFLAGS) $(LINKS) -o $(OUTPUT)
-
-clean:
-	rm -f $(OUTPUT)
+build: 
+	$(CC) $(CFLAGS) $(LDFLAGS) $(OUTPUT) $(SRC) $(SHELLFILE) $(EXPORTS)
