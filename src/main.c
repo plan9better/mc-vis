@@ -43,9 +43,16 @@ void UpdateDrawFrame(void){
   	ClearBackground(RAYWHITE);
 	DrawFPS(10, 10);
 	BeginMode3D(camera);
-	  DrawGrid(10, 5.0f);
+	  DrawGrid(10, 3.0f);
+	  Vector3 pos;
+	  for(int i = 0; i < amount; i++){
+	    pos = (Vector3){blocks[i].x, blocks[i].y, blocks[i].z};
+	    printf("drawing cube at: %d %d %d\n", blocks[i].x, blocks[i].y, blocks[i].z);
+	    DrawCube(pos, 1, 1, 1, (Color){ 0, 121, 241, 255 });
+	  }
 	EndMode3D();
   EndDrawing();
+  /*
   static int counter = 0;
   if(blocks == NULL){
     printf("%d: Blocks array is null.\n", counter++);
@@ -56,7 +63,7 @@ void UpdateDrawFrame(void){
   for(int i = 0; i < amount; i++){
 	  printf("%d, %s\n", i, blocks[i].name);
   }
-
+*/
   return;
 }
 EXTERN EMSCRIPTEN_KEEPALIVE void initBlocks(int amnt){
