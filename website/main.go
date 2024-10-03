@@ -1,64 +1,28 @@
 package main
 import (
 	"net/http"
+	"encoding/json"
 	"net"
 	"log"
 	"fmt"
 	"os"
+	"sync"
 
 	"github.com/wasmerio/wasmer-go/wasmer"
 )
 
-func callWasm(){
-	// Read the WASM file
-	wasmBytes, err := os.ReadFile("../static/index.wasm")
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// Instantiate the WebAssembly runtime
-	engine := wasmer.NewEngine()
-	store := wasmer.NewStore(engine)
-
-	// Compile the module
-	module, err := wasmer.NewModule(store, wasmBytes)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// Create an empty import object
-	importObject := wasmer.NewImportObject()
-
-	// Instantiate the WebAssembly module
-	instance, err := wasmer.NewInstance(module, importObject)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// Get the `add` exported function
-	initFunc, err := instance.Exports.GetFunction("initBlocks")
-	if err != nil {
-		log.Fatal(err)
-	}
-	addFunc, err := instance.Exports.GetFunction("addBlock")
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// Call the `add` function with arguments 2 and 3
-	result, err := initFunc(1)
-	if err != nil {
-		log.Fatal(err)
-	}
-	result, err = addFunc("Water -96 62 224")
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	fmt.Printf("Result: %v\n", result)
+var addBlockRequested = false;
+type coords struct{
+	x int
+	y int
+	z int
+}
+type blockList struct{
+	mu sync.Mutex
+	blocks map[coords]string
 }
 
-func handleConnections(ch chan []byte){
+func handleConnections(bList *blockList){
 	listener, err := net.Listen("tcp", ":8337")
 	if err != nil{
 		log.Fatal("Could not start a tcp socket")
@@ -78,7 +42,10 @@ func handleConnections(ch chan []byte){
 					conn.Close()
 					return
 				}
-				ch<-msg
+				var c coords
+				var name string
+				fmt.Sscanf(string(msg),"%s %d %d %d" , &name, &c.x, &c.y, &c.z); 
+				bList.blocks[c] = name;
 			}
 		}()
 	}
@@ -90,18 +57,22 @@ func fileServerHandler(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, "../static"+ r.URL.Path)
 }
 
-func main() {
-    http.HandleFunc("/", fileServerHandler)
 
-    go func(){
-	    ch := make(chan []byte)
-	    go handleConnections(ch)
-	    for{
-		fmt.Printf("new message: %s\n", <-ch)
-		fmt.Printf("initializing and adding block...\n")
-		callWasm();
-	    }
-    }()
+func main() {
+    var bList blockList;
+
+    http.HandleFunc("/", fileServerHandler)
+    http.HandleFunc("/trigger", func(w http.ResponseWriter, r *http.Request) {
+		addBlockRequested = true
+		w.WriteHeader(http.StatusOK)
+    })
+    http.HandleFunc("/poll", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]bool{"addBlock": addBlockRequested})
+		addBlockRequested = false
+    })
+
+    go handleConnections(&bList);
 
     log.Println("Server started at :8080")
     if err := http.ListenAndServe(":8080", nil); err != nil {
