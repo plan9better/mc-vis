@@ -140,20 +140,34 @@ canvas.emscripten { border: 0px none; background-color: black; }
           if (text) console.error('[post-exception status] ' + text);
         };
       };
+
+      // Poll the server every 2 seconds
+    setInterval(async function() {
+        const response = await fetch('/poll');
+        const data = await response.json();
+	console.log("polling");
+        if (data) {
+		let i = 0;
+		while(i < data.length){
+		  const result2 = Module.ccall(
+		    "addBlock", // name of C function
+		    'number', // return type
+		    ['string'], // argument types
+		    [data[i]], // arguments
+		  );
+		  i++;
+		}
+
+		console.log(data);
+        }
+    }, 2000);
       document.getElementById("mybutton").addEventListener("click", () => {
   const result = Module.ccall(
     "initBlocks", // name of C function
     null, // return type
     ['number'], // argument types
-    [1], // arguments
+    [10], // arguments
   );
-  const result2 = Module.ccall(
-    "addBlock", // name of C function
-    'number', // return type
-    ['string'], // argument types
-    ["Water 1 1 1"], // arguments
-  );
-	      console.log(result2);
 });
 
     </script>

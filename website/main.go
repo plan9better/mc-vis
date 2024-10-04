@@ -5,21 +5,13 @@ import (
 	"net"
 	"log"
 	"fmt"
-	"os"
 	"sync"
-
-	"github.com/wasmerio/wasmer-go/wasmer"
 )
 
 var addBlockRequested = false;
-type coords struct{
-	x int
-	y int
-	z int
-}
 type blockList struct{
 	mu sync.Mutex
-	blocks map[coords]string
+	blocks []string
 }
 
 func handleConnections(bList *blockList){
@@ -42,10 +34,21 @@ func handleConnections(bList *blockList){
 					conn.Close()
 					return
 				}
-				var c coords
+				/*
+				var x, y, z int
 				var name string
-				fmt.Sscanf(string(msg),"%s %d %d %d" , &name, &c.x, &c.y, &c.z); 
-				bList.blocks[c] = name;
+				fmt.Sscanf(string(msg),"%s %d %d %d" , &name, &x, &y, &z); 
+				coords := fmt.Sprintf("%d %d %d", x, y, z);
+				*/
+				var msgStr string
+				for i := 0; msg[i] != '\u0000'; i++{
+					msgStr += string(msg[i]);
+				}
+
+				bList.mu.Lock();
+				bList.blocks = append(bList.blocks, msgStr);
+				bList.mu.Unlock();
+				fmt.Println("in func: ", bList.blocks);
 			}
 		}()
 	}
@@ -60,6 +63,7 @@ func fileServerHandler(w http.ResponseWriter, r *http.Request) {
 
 func main() {
     var bList blockList;
+    bList.blocks = make([]string, 0);
 
     http.HandleFunc("/", fileServerHandler)
     http.HandleFunc("/trigger", func(w http.ResponseWriter, r *http.Request) {
@@ -68,7 +72,12 @@ func main() {
     })
     http.HandleFunc("/poll", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]bool{"addBlock": addBlockRequested})
+
+		bList.mu.Lock();
+		json.NewEncoder(w).Encode(bList.blocks);
+		bList.mu.Unlock();
+
+		fmt.Println("in main: ", bList.blocks);
 		addBlockRequested = false
     })
 

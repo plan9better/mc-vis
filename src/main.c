@@ -47,7 +47,7 @@ void UpdateDrawFrame(void){
 	  Vector3 pos;
 	  for(int i = 0; i < amount; i++){
 	    pos = (Vector3){blocks[i].x, blocks[i].y, blocks[i].z};
-	    printf("drawing cube at: %d %d %d\n", blocks[i].x, blocks[i].y, blocks[i].z);
+	    //printf("drawing cube at: %d %d %d\n", blocks[i].x, blocks[i].y, blocks[i].z);
 	    DrawCube(pos, 1, 1, 1, (Color){ 0, 121, 241, 255 });
 	  }
 	EndMode3D();
