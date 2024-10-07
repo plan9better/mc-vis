@@ -39,6 +39,10 @@ camera.projection = CAMERA_PERSPECTIVE;             // Camera projection type
 
 
 void UpdateDrawFrame(void){
+	if (IsKeyDown(KEY_RIGHT)) ballPosition.x += 2.0f;
+        if (IsKeyDown(KEY_LEFT)) ballPosition.x -= 2.0f;
+        if (IsKeyDown(KEY_UP)) ballPosition.y -= 2.0f;
+        if (IsKeyDown(KEY_DOWN)) ballPosition.y += 2.0f;
   BeginDrawing();
   	ClearBackground(RAYWHITE);
 	DrawFPS(10, 10);

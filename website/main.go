@@ -25,21 +25,17 @@ func handleConnections(bList *blockList){
 		if err != nil{
 			log.Println("Could not accept a connection")
 		}
+		log.Println("Accepted a connection");
 		go func(){
 			for conn != nil {
-				msg := make([]byte, 4096)
+				msg := make([]byte, 128)
 				_, err := conn.Read(msg)
+				log.Println("MSG: ", msg);
 				if err != nil {
 					log.Printf("Error reading a msg from client: local: %s, remote: %s\n", conn.LocalAddr(), conn.RemoteAddr())
 					conn.Close()
 					return
 				}
-				/*
-				var x, y, z int
-				var name string
-				fmt.Sscanf(string(msg),"%s %d %d %d" , &name, &x, &y, &z); 
-				coords := fmt.Sprintf("%d %d %d", x, y, z);
-				*/
 				var msgStr string
 				for i := 0; msg[i] != '\u0000'; i++{
 					msgStr += string(msg[i]);
@@ -75,6 +71,7 @@ func main() {
 
 		bList.mu.Lock();
 		json.NewEncoder(w).Encode(bList.blocks);
+		bList.blocks = make([]string, 0);
 		bList.mu.Unlock();
 
 		fmt.Println("in main: ", bList.blocks);
